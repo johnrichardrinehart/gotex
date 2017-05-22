@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-type dbRows struct {
-	urls []string // Git URL
-	cms  []string // commit hash
+type row struct {
+	URL    string // Repo URL
+	Commit string // commit hash
 }
 
 func initDB(fpath string) *sql.DB {
@@ -42,7 +42,7 @@ func migrate(db *sql.DB) {
 	}
 }
 
-func dbRepoInfo(db *sql.DB, d string, r string) dbRows {
+func dbRepoInfo(db *sql.DB, d string, r string) []row {
 	fmt.Println("Grabbing rows", d, "and", r, ".")
 	stmt, err := db.Prepare("SELECT cm, url FROM latex_builds WHERE domain = $1 AND repo = $2")
 	defer stmt.Close()
@@ -52,19 +52,16 @@ func dbRepoInfo(db *sql.DB, d string, r string) dbRows {
 	rows, err := stmt.Query(d, r)
 	defer rows.Close()
 	// make a container of rows that will be returned
-	//var rowsarr []row
+	var dbRows []row
 	// make containers for the scanned variables
 	var cm string
 	var url string
-	// make a container for the data to be returned
-	var dbrows dbRows
 	for rows.Next() {
 		err := rows.Scan(&cm, &url)
 		if err != nil {
 			panic(err)
 		}
-		dbrows.urls = append(dbrows.urls, url)
-		dbrows.cms = append(dbrows.cms, cm)
+		dbRows = append(dbRows, row{URL: url, Commit: cm})
 	}
-	return dbrows
+	return dbRows
 }

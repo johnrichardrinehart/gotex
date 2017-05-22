@@ -3,20 +3,24 @@
    <head>
       <title>Repos</title>
       <meta charset="UTF-8">
+      <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></script>
+      <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
       <script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js"></script>
    </head>
    <body>
-      <div id="app">
-         <p>{{urls}}</p>
-         <p>{{cms}}</p>
+      <!--loop through the number of compilations-->
+      <div id="app" class="container">
+         <div class="row" v-for="row in rows">
+            <div class="col-xs-4 text-center">{{row.url}}</div>
+            <div class="col-xs-4 text-center">{{row.commit}}</div>
+         </div>
       </div>
-      <p>Welcome to my repos page.</p>
       <script>
          new Vue({
             el: '#app',
-            urls: [[.Urls]],
-            cms: [[.Cms]],
-
+            data: {
+               rows: [{[[range .]]url:[[.URL]], commit:[[.Commit]][[end]]}]
+            }
          })
       </script>
    </body>
