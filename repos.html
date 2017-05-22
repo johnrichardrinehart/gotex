@@ -3,7 +3,8 @@
    <head>
       <title>Repos</title>
       <meta charset="UTF-8">
-      <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></script>
+      <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <link rel="stylesheet" type="text/css" href="/assets/custom.css">
       <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
       <script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js"></script>
    </head>
@@ -12,14 +13,30 @@
       <div id="app" class="container">
          <div class="row" v-for="row in rows">
             <div class="col-xs-4 text-center">{{row.url}}</div>
-            <div class="col-xs-4 text-center">{{row.commit}}</div>
+            <div class="col-xs-1 text-center">{{row.commit}}</div>
+            <div class="col-xs-1 text-center">{{row.committer}}</div>
+            <div class="col-xs-1 text-center">{{row.filename}}</div>
+            <div class="col-xs-2 text-center">{{row.logname}}</div>
+            <div class="col-xs-2 text-center">{{row.diffname}}</div>
+            <div class="col-xs-1 text-center">{{row.date}}</div>
          </div>
       </div>
       <script>
          new Vue({
             el: '#app',
             data: {
-               rows: [{[[range .]]url:[[.URL]], commit:[[.Commit]][[end]]}]
+               rows: [{
+                  [[range .]]
+                  url:[[.URL]],
+                  commit:[[.Commit]],
+                  committer:[[.Committer]],
+                  filename:[[.Filename]],
+                  logname:[[.Logname]],
+                  diffname:[[.Diffname]],
+                  date:[[.Date]],
+                  [[end]]
+               },
+               ]
             }
          })
       </script>

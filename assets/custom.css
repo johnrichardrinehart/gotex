@@ -1,0 +1,7 @@
+#app>.row:nth-of-type(even){
+   background-color: #dcdcdc;
+}
+
+#app>.row:nth-of-type(odd){
+  background-color: #aaaaaa;
+}

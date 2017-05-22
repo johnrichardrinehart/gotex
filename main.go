@@ -14,7 +14,9 @@ func main() {
 	defer db.Close()
 	migrate(db)
 	r := vestigo.NewRouter()
-	r.Get("/:domain/:repo", getHandler(db))
-	r.Post("/:domain/:repo", postHandler(db))
+	// serve static assets
+	r.Get("/:domain/:user/:repo", getHandler(db))
+	r.Post("/:domain/:user/:repo", postHandler(db))
+	r.Get("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))).(http.HandlerFunc))
 	http.ListenAndServe("127.0.0.1:80", r)
 }
