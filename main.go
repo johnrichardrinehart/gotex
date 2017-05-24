@@ -18,5 +18,5 @@ func main() {
 	r.Get("/:domain/:user/:repo", getHandler(db))
 	r.Post("/:domain/:user/:repo", postHandler(db))
 	r.Get("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))).(http.HandlerFunc))
-	http.ListenAndServe("127.0.0.1:80", r)
+	http.ListenAndServe("0.0.0.0:8000", r)
 }

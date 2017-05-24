@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/fuzzybear3965/gotex/github"
 	"github.com/husobee/vestigo"
 	"html/template"
 	"net/http"
@@ -24,9 +26,14 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 
 func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-		fmt.Println("PUT")
-		fmt.Println(vestigo.Param(r, "domain"))
-		fmt.Println(vestigo.Param(r, "repo"))
+		defer r.Body.Close()
+		decoder := json.NewDecoder(r.Body)
+		var p github.PushEvent
+		err := decoder.Decode(&p)
+
+		fmt.Printf("%+v\n", p)
+		if err != nil {
+			panic(err)
+		}
 	}
 }

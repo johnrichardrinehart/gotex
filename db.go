@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type hookInfo struct {
+type HookInfo struct {
 	URL       string // Repo URL
 	Commit    string // commit hash
 	Committer string // username
@@ -51,7 +51,7 @@ func migrate(db *sql.DB) {
 	}
 }
 
-func dbRepoInfo(db *sql.DB, d string, u string, p string) []hookInfo {
+func dbRepoInfo(db *sql.DB, d string, u string, p string) []HookInfo {
 	// d = domain (github.com)
 	// u = user (fuzzybear3965)
 	// p = project (gotex)
@@ -66,7 +66,7 @@ func dbRepoInfo(db *sql.DB, d string, u string, p string) []hookInfo {
 	rows, err := stmt.Query(path)
 	defer rows.Close()
 	// make a container of rows that will be returned
-	var dbRows []hookInfo
+	var dbRows []HookInfo
 	// make containers for the scanned variables
 	var url, commit, committer, filename, logname, diffname string
 	var date int
@@ -75,7 +75,7 @@ func dbRepoInfo(db *sql.DB, d string, u string, p string) []hookInfo {
 		if err != nil {
 			panic(err)
 		}
-		dbRows = append(dbRows, hookInfo{
+		dbRows = append(dbRows, HookInfo{
 			URL:       url,
 			Commit:    commit,
 			Committer: committer,
@@ -87,26 +87,26 @@ func dbRepoInfo(db *sql.DB, d string, u string, p string) []hookInfo {
 	return dbRows
 }
 
-func addRow(db *sql.DB) []row {
-	fmt.Println("Adding rows", d, "and", r, ".")
-	stmt, err := db.Prepare("SELECT cm, url FROM latex_builds WHERE domain = $1 AND repo = $2")
-	defer stmt.Close()
-	if err != nil {
-		panic(err)
-	}
-	rows, err := stmt.Query(d, r)
-	defer rows.Close()
-	// make a container of rows that will be returned
-	var dbRows []row
-	// make containers for the scanned variables
-	var cm string
-	var url string
-	for rows.Next() {
-		err := rows.Scan(&cm, &url)
-		if err != nil {
-			panic(err)
-		}
-		dbRows = append(dbRows, row{URL: url, Commit: cm})
-	}
-	return dbRows
-}
+// func addRow(db *sql.DB) []row {
+// 	fmt.Println("Adding rows", d, "and", r, ".")
+// 	stmt, err := db.Prepare("SELECT cm, url FROM latex_builds WHERE domain = $1 AND repo = $2")
+// 	defer stmt.Close()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	rows, err := stmt.Query(d, r)
+// 	defer rows.Close()
+// 	// make a container of rows that will be returned
+// 	var dbRows []row
+// 	// make containers for the scanned variables
+// 	var cm string
+// 	var url string
+// 	for rows.Next() {
+// 		err := rows.Scan(&cm, &url)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		dbRows = append(dbRows, row{URL: url, Commit: cm})
+// 	}
+// 	return dbRows
+// }
