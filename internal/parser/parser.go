@@ -9,6 +9,7 @@ import (
 	//"github.com/fuzzybear3965/gotex/internal/gitlab"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type DBRow struct {
@@ -25,9 +26,9 @@ type DBRow struct {
 }
 
 func ParseHook(r *http.Request) []*DBRow {
-	d := r.Header["Origin"][0]
+	d := strings.Split(r.URL.Path, "/")[1] // /github.com/a/b -> github.com
 	// Decode the JSON body into the appropriate struct
-	if d == "https://github.com" {
+	if d == "github.com" {
 		// Get the push event
 		p := new(github.PushEvent)
 		json.NewDecoder(r.Body).Decode(p)

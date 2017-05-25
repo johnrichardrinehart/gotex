@@ -1,3 +1,5 @@
 *.sw?
 gotex.db*
 gotex.exe
+repos/
+build/
