@@ -2,16 +2,21 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
-	"github.com/fuzzybear3965/gotex/github"
+	"github.com/fuzzybear3965/gotex/internal/parser"
 	"github.com/husobee/vestigo"
 	"html/template"
 	"net/http"
 )
 
+type templateContainer struct {
+	DBRows []*parser.DBRow
+}
+
 func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		//TODO: render the template immediately and serve the rows over WebSockets
 		w.WriteHeader(200)
 		rows := dbRepoInfo(
 			d,
@@ -20,20 +25,15 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			vestigo.Param(r, "repo"),
 		)
 		tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("repos.html")) // .Must() panics if err is non-nil
-		tpl.Execute(w, rows)
+		fmt.Printf("%+v", rows)
+		tpl.Execute(w, templateContainer{DBRows: rows})
 	}
 }
 
 func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		decoder := json.NewDecoder(r.Body)
-		var p github.PushEvent
-		err := decoder.Decode(&p)
-
-		fmt.Printf("%+v\n", p)
-		if err != nil {
-			panic(err)
-		}
+		fmt.Println("Received a post request.")
+		h := parser.ParseHook(r)
+		go addRows(d, h)
 	}
 }
