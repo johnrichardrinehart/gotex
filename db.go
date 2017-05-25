@@ -83,8 +83,9 @@ func dbRepoInfo(db *sql.DB, d string, u string, p string) []*parser.DBRow {
 	return dbRows
 }
 
-func addRows(db *sql.DB, h []*parser.DBRow) {
-	fmt.Println("Going to add some rows.")
+// addRows accepts as arguments 1) db in which to store rows and 2) an array of rows to add
+func addRows(db *sql.DB, h []*parser.DBRow, c chan []*parser.DBRow) {
+	fmt.Println("\nReceived", len(h), "rows to process.")
 	qstmt, err := db.Prepare(`SELECT * FROM latex_builds WHERE id = ? and path = ?`)
 	istmt, err := db.Prepare(`INSERT INTO latex_builds(timestamp, id, message, url, username, realname, pdfname, logname, diffname, path) values(?,?,?,?,?,?,?,?,?,?)`)
 	defer qstmt.Close()
@@ -96,29 +97,32 @@ func addRows(db *sql.DB, h []*parser.DBRow) {
 	// Check if we already have any of these rows
 	// Loop over the rows to add
 	commitNumber := 0
+	var removeIdxs []int
 	for i, r := range h {
 		commitNumber += 1
 		fmt.Println("Working through commit #", commitNumber)
 		// See if any row has this combination of id and path
-		res, err := qstmt.Query(r.ID, r.Path)
+		rows, err := qstmt.Query(r.ID, r.Path)
+		defer rows.Close()
 		if err != nil {
 			panic(err)
 		}
 		// if we have matches the store this index to clean up h later
-		var removeIdxs []int
-		if res.Next() {
-			fmt.Println("We have a match for that row.")
+		if rows.Next() {
 			// we should only have one match on any ID and Path per the Unique()
 			// condition in the scheme for latex_builds
 			removeIdxs = append(removeIdxs, i)
 		} else {
-			fmt.Println("No rows found like that, yet.")
-			res.Close()
-			// Compile the document and, if successful, log the row to the database
 			_, err := istmt.Exec(r.Timestamp, r.ID, r.Message, r.URL, r.UserName, r.RealName, r.PDFName, r.LogName, r.DiffName, r.Path)
 			if err != nil {
 				panic(err)
 			}
+			// Compile the document and, if successful, log the row to the database
 		}
 	}
+	for i := len(removeIdxs) - 1; i >= 0; i-- {
+		h = append(h[:i], h[i+1:]...)
+	}
+	fmt.Println("Added", len(h), "rows.")
+	c <- h
 }

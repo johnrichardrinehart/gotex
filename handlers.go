@@ -34,6 +34,8 @@ func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Received a post request.")
 		h := parser.ParseHook(r)
-		go addRows(d, h)
+		ch := make(chan []*parser.DBRow)
+		go addRows(d, h, ch)
+		go compile(ch)
 	}
 }
