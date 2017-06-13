@@ -1,5 +1,5 @@
 *.sw?
-gotex.db*
-gotex.exe
+gotex.*
 repos/
-build/
+builds/
+db.go*

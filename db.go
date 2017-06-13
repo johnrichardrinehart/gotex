@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/fuzzybear3965/gotex/internal/parser"
+	"os"
 )
 
 func initDB(fpath string) *sql.DB {
@@ -84,7 +85,8 @@ func dbRepoInfo(db *sql.DB, d string, u string, p string) []*parser.DBRow {
 }
 
 // addRows accepts as arguments 1) db in which to store rows and 2) an array of rows to add
-func addRows(db *sql.DB, h []*parser.DBRow, c chan []*parser.DBRow) {
+func addRows(db *sql.DB, c chan []*parser.DBRow) {
+	h := <-c
 	fmt.Println("\nReceived", len(h), "rows to process.")
 	qstmt, err := db.Prepare(`SELECT * FROM latex_builds WHERE id = ? and path = ?`)
 	istmt, err := db.Prepare(`INSERT INTO latex_builds(timestamp, id, message, url, username, realname, pdfname, logname, diffname, path) values(?,?,?,?,?,?,?,?,?,?)`)
@@ -99,6 +101,14 @@ func addRows(db *sql.DB, h []*parser.DBRow, c chan []*parser.DBRow) {
 	commitNumber := 0
 	var removeIdxs []int
 	for i, r := range h {
+		// Check if the PDF, DIFF, LOG were generated properly
+		// Root PDF
+		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.pdf", r.Path, r.ID, r.TeXRoot)); os.IsExist(err) {
+			r.PDFName = fmt.Sprintf("%v.pdf", r.TeXRoot)
+			fmt.Sprintf("%+v", r.PDFName)
+		}
+		// Diff PDF
+		// Log PDF
 		commitNumber += 1
 		fmt.Println("Working through commit #", commitNumber)
 		// See if any row has this combination of id and path
@@ -123,6 +133,5 @@ func addRows(db *sql.DB, h []*parser.DBRow, c chan []*parser.DBRow) {
 	for i := len(removeIdxs) - 1; i >= 0; i-- {
 		h = append(h[:i], h[i+1:]...)
 	}
-	fmt.Println("Added", len(h), "rows.")
-	c <- h
+	fmt.Printf("Added %v entries that I will now try to compile.\n", len(h))
 }

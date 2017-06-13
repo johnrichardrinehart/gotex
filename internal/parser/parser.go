@@ -2,16 +2,18 @@ package parser
 
 import (
 	"encoding/json"
-	//"fmt"
+	"fmt"
 	//"github.com/fuzzybear3965/gotex/internal/bitbucket"
 	//"github.com/fuzzybear3965/gotex/internal/commits"
 	"github.com/fuzzybear3965/gotex/internal/github"
-	//"github.com/fuzzybear3965/gotex/internal/gitlab"
+	"github.com/fuzzybear3965/gotex/internal/gitlab"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
+// TODO: Change DBRow for another name (it's not in db.go and has non-exported
+// fields)
 type DBRow struct {
 	Timestamp string
 	ID        string
@@ -23,6 +25,7 @@ type DBRow struct {
 	LogName   string
 	DiffName  string
 	Path      string
+	TeXRoot   string // root name of the main LaTeX file
 }
 
 func ParseHook(r *http.Request) []*DBRow {
@@ -39,6 +42,7 @@ func ParseHook(r *http.Request) []*DBRow {
 		}
 		// restruct the array of commits into a general purpose container
 		h := make([]*DBRow, len(p.Commits))
+		fmt.Printf("%+v", r.URL.Query())
 		for idx, c := range p.Commits {
 			h[idx] = &DBRow{
 				Timestamp: c.Timestamp,
@@ -48,12 +52,35 @@ func ParseHook(r *http.Request) []*DBRow {
 				UserName:  c.Author.UserName,
 				RealName:  c.Author.RealName,
 				Path:      u.Hostname() + u.Path,
+				TeXRoot:   r.URL.Query().Get("root"), // in the Query
 			}
 		}
 		return h
 	} else if d == "gitlab.com" {
-		//var p gitlab.PushEvent
-		return make([]*DBRow, 5)
+		// Get the push event
+		p := new(gitlab.PushEvent)
+		json.NewDecoder(r.Body).Decode(p)
+		// get the url to be used as the path column (github.com/a/b)
+		u, err := url.Parse(p.Repository.URL)
+		if err != nil {
+			panic(err)
+		}
+		// restruct the array of commits into a general purpose container
+		h := make([]*DBRow, len(p.Commits))
+		fmt.Printf("%+v", r.URL.Query())
+		for idx, c := range p.Commits {
+			h[idx] = &DBRow{
+				Timestamp: c.Timestamp,
+				ID:        c.ID,
+				URL:       c.URL,
+				Message:   c.Message,
+				UserName:  c.Author.UserName,
+				RealName:  c.Author.UserName, // gitlab has no RealName
+				Path:      u.Hostname() + u.Path,
+				TeXRoot:   r.URL.Query().Get("root"), // in the Query
+			}
+		}
+		return h
 	} else if d == "bitbucket.com" {
 		//var p bitbucket.PushEvent
 		return make([]*DBRow, 5)
@@ -64,11 +91,4 @@ func ParseHook(r *http.Request) []*DBRow {
 		// 2) Return a page to the user that suggests they contact the CI admin to
 		// implement this  domain
 	}
-	//if d == "github.com" {
-	//}
-	//} else if d == "gitlab.com" {
-	//return &hookInfo{}
-	//} else if d == "bitbucket.com" {
-	//return &hookInfo{}
-	//}
 }
