@@ -71,6 +71,11 @@ func compile(rows []*parser.DBRow, c chan []*parser.DBRow) {
 			fmt.Println("latexmk the diff failed")
 		}
 
+		// Rename the diff pdf
+		if err := os.Rename(fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot), fmt.Sprintf("repos/%v/%v.diff.pdf", row.Path, row.TeXRoot)); err != nil {
+			fmt.Printf("Could not rename the diff pdf %v.\n", row.TeXRoot)
+		}
+
 		fmt.Printf("Building root PDF file.\n")
 		// 6) Build current LaTeX file
 		if !runCommand(exec.Command("latexmk", append(latexmkArgs, curTeX)...), repopath) {
@@ -90,7 +95,7 @@ func compile(rows []*parser.DBRow, c chan []*parser.DBRow) {
 		}
 
 		// move the diff pdf
-		if err := os.Rename(diffTeX, fmt.Sprintf("build/%v/%v/%v.diff.pdf", row.Path, row.ID, row.TeXRoot)); err != nil {
+		if err := os.Rename(fmt.Sprintf("repos/%v/%v.diff.pdf", row.Path, row.TeXRoot), fmt.Sprintf("build/%v/%v/%v.diff.pdf", row.Path, row.ID, row.TeXRoot)); err != nil {
 			fmt.Printf("Could not move file %v.\n", diffTeX)
 		}
 

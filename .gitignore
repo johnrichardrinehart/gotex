@@ -3,3 +3,4 @@ gotex.*
 repos/
 builds/
 db.go*
+main.exe

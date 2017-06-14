@@ -28,9 +28,24 @@
                </a>
             </div>
             <div class="col-xs-2 text-center" :title=row.RealName>{{row.UserName}}</div>
-            <div class="col-xs-2 text-center">{{row.PDFName}}</div>
-            <div class="col-xs-2 text-center">{{row.LogName}}</div>
-            <div class="col-xs-2 text-center">{{row.DiffName}}</div>
+            <div class="col-xs-2 text-center">
+                <a :href=row.PDFName>
+                <!--<a :href=row.PDFName :title=row.PDFName|filename>-->
+                    {{row.PDFName | filename }}
+                </a>
+            </div>
+            <div class="col-xs-2 text-center">
+                <a :href=row.LogName>
+                <!--<a :href=row.LogName :title=row.LogName|filename>-->
+                    {{row.LogName | filename }}
+                </a>
+            </div>
+            <div class="col-xs-2 text-center">
+                <a :href=row.DiffName>
+                <!--<a :href=row.DiffName :title=row.DiffName|filename>-->
+                    {{row.DiffName | filename }}
+                </a>
+            </div>
          </div>
       </div>
       <script>
@@ -42,7 +57,10 @@
             filters: {
                abbreviate: function(s,n) {
                   return s.slice(0,n)
-               }
+               },
+                filename: function(s) {
+                    return s.split('/').slice(-1)[0]
+                }
             }
          })
       </script>

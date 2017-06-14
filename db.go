@@ -23,21 +23,21 @@ func initDB(fpath string) *sql.DB {
 
 func migrate(db *sql.DB) {
 	sql := `
-	CREATE TABLE IF NOT EXISTS latex_builds(
-		n INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		timestamp VARCHAR NOT NULL,
-		id VARCHAR NOT NULL,
-		message VARCHAR,
-		url VARCHAR NOT NULL,
-		username VARCHAR NOT NULL,
-		realname VARCHAR NOT NULL,
-		pdfname VARCHAR NOT NULL,
-		diffname VARCHAR NOT NULL,
-		logname VARCHAR NOT NULL,
-		path VARCHAR NOT NULL,
-		UNIQUE(id, path)
-	);
-	`
+    CREATE TABLE IF NOT EXISTS latex_builds(
+	n INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	timestamp VARCHAR NOT NULL,
+	id VARCHAR NOT NULL,
+	message VARCHAR,
+	url VARCHAR NOT NULL,
+	username VARCHAR NOT NULL,
+	realname VARCHAR NOT NULL,
+	pdfname VARCHAR NOT NULL,
+	diffname VARCHAR NOT NULL,
+	logname VARCHAR NOT NULL,
+	path VARCHAR NOT NULL,
+	UNIQUE(id, path)
+    );
+    `
 
 	_, err := db.Exec(sql)
 
@@ -103,12 +103,17 @@ func addRows(db *sql.DB, c chan []*parser.DBRow) {
 	for i, r := range h {
 		// Check if the PDF, DIFF, LOG were generated properly
 		// Root PDF
-		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.pdf", r.Path, r.ID, r.TeXRoot)); os.IsExist(err) {
-			r.PDFName = fmt.Sprintf("%v.pdf", r.TeXRoot)
-			fmt.Sprintf("%+v", r.PDFName)
+		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.pdf", r.Path, r.ID, r.TeXRoot)); err == nil {
+			r.PDFName = fmt.Sprintf("/builds/%v/%v/%v.pdf", r.Path, r.ID, r.TeXRoot)
 		}
 		// Diff PDF
+		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.TeXRoot)); err == nil {
+			r.DiffName = fmt.Sprintf("/builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.TeXRoot)
+		}
 		// Log PDF
+		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.log", r.Path, r.ID, r.TeXRoot)); err == nil {
+			r.LogName = fmt.Sprintf("/builds/%v/%v/%v.log", r.Path, r.ID, r.TeXRoot)
+		}
 		commitNumber += 1
 		fmt.Println("Working through commit #", commitNumber)
 		// See if any row has this combination of id and path
