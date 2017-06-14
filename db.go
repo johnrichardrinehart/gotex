@@ -46,13 +46,12 @@ func migrate(db *sql.DB) {
 	}
 }
 
-func dbRepoInfo(db *sql.DB, d string, u string, p string) []*parser.DBRow {
+func getRows(db *sql.DB, d string, u string, p string) []*parser.DBRow {
 	// d = domain (github.com)
 	// u = user (fuzzybear3965)
 	// p = project (gotex)
-	fmt.Println("Grabbing rows", d, " ", u, " and", p, ".")
+	fmt.Printf("Grabbing rows for %v/%v/%v.\n", d, u, p)
 	path := fmt.Sprintf("%v/%v/%v", d, u, p) // maybe %v
-	fmt.Println(path)
 	stmt, err := db.Prepare(`SELECT timestamp, id, message, url, username, realname, pdfname, logname, diffname FROM latex_builds WHERE path = $1`)
 	defer stmt.Close()
 	if err != nil {

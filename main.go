@@ -5,8 +5,22 @@ import (
 	"github.com/husobee/vestigo"
 	//"log"
 	_ "github.com/mattn/go-sqlite3"
+	"io"
 	"net/http"
+	"os"
 )
+
+func init() {
+	// taken from
+	// https://stackoverflow.com/questions/11692860/how-can-i-efficiently-download-a-large-file-using-go
+	if _, err := os.Stat("repos.html"); os.IsNotExist(err) {
+		out, _ := os.Create("repos.html")
+		defer out.Close()
+		resp, _ := http.Get("https://raw.githubusercontent.com/fuzzybear3965/gotex/master/repos.html")
+		defer resp.Body.Close()
+		io.Copy(out, resp.Body)
+	}
+}
 
 func main() {
 	// Initialize the database
