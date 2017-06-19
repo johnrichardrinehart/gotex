@@ -104,17 +104,24 @@ func addRows(db *sql.DB, c chan []*parser.DBRow) {
 		// Root PDF
 		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.pdf", r.Path, r.ID, r.TeXRoot)); err == nil {
 			r.PDFName = fmt.Sprintf("/builds/%v/%v/%v.pdf", r.Path, r.ID, r.TeXRoot)
+		} else {
+			fmt.Printf("File builds/%v/%v/%v.pdf doesn't exist. Maybe compilation failed.\n", r.Path, r.ID, r.TeXRoot)
 		}
 		// Diff PDF
 		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.TeXRoot)); err == nil {
 			r.DiffName = fmt.Sprintf("/builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.TeXRoot)
+		} else {
+			fmt.Printf("File builds/%v/%v/%v.diff.pdf doesn't exist. Maybe compilation failed.\n", r.Path, r.ID, r.TeXRoot)
 		}
 		// Log PDF
 		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.log", r.Path, r.ID, r.TeXRoot)); err == nil {
 			r.LogName = fmt.Sprintf("/builds/%v/%v/%v.log", r.Path, r.ID, r.TeXRoot)
+		} else {
+			fmt.Printf("File builds/%v/%v/%v.log doesn't exist. Maybe compilation failed.\n", r.Path, r.ID, r.TeXRoot)
 		}
+
 		commitNumber += 1
-		fmt.Println("Working through commit #", commitNumber)
+		//fmt.Println("Working through commit #", commitNumber)
 		// See if any row has this combination of id and path
 		rows, err := qstmt.Query(r.ID, r.Path)
 		defer rows.Close()
@@ -125,6 +132,7 @@ func addRows(db *sql.DB, c chan []*parser.DBRow) {
 		if rows.Next() {
 			// we should only have one match on any ID and Path per the Unique()
 			// condition in the scheme for latex_builds
+			fmt.Printf("I've already added row with commit hash %v to the database.\n", r.ID)
 			removeIdxs = append(removeIdxs, i)
 		} else {
 			_, err := istmt.Exec(r.Timestamp, r.ID, r.Message, r.URL, r.UserName, r.RealName, r.PDFName, r.LogName, r.DiffName, r.Path)
@@ -137,5 +145,5 @@ func addRows(db *sql.DB, c chan []*parser.DBRow) {
 	for i := len(removeIdxs) - 1; i >= 0; i-- {
 		h = append(h[:i], h[i+1:]...)
 	}
-	fmt.Printf("Added %v entries that I will now try to compile.\n", len(h))
+	fmt.Printf("Added %v rows to the database.\n", len(h))
 }

@@ -2,7 +2,7 @@ package parser
 
 import (
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	//"github.com/fuzzybear3965/gotex/internal/bitbucket"
 	//"github.com/fuzzybear3965/gotex/internal/commits"
 	"github.com/fuzzybear3965/gotex/internal/github"
@@ -42,7 +42,7 @@ func ParseHook(r *http.Request) []*DBRow {
 		}
 		// restruct the array of commits into a general purpose container
 		h := make([]*DBRow, len(p.Commits))
-		fmt.Printf("%+v", r.URL.Query())
+		//fmt.Printf("%+v", r.URL.Query())
 		for idx, c := range p.Commits {
 			h[idx] = &DBRow{
 				Timestamp: c.Timestamp,
@@ -67,7 +67,7 @@ func ParseHook(r *http.Request) []*DBRow {
 		}
 		// restruct the array of commits into a general purpose container
 		h := make([]*DBRow, len(p.Commits))
-		fmt.Printf("%+v", r.URL.Query())
+		//fmt.Printf("%+v", r.URL.Query())
 		for idx, c := range p.Commits {
 			h[idx] = &DBRow{
 				Timestamp: c.Timestamp,
