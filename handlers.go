@@ -38,8 +38,13 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			vestigo.Param(r, "user"),
 			vestigo.Param(r, "repo"),
 		)
-		tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("repos.html")) // .Must() panics if err is non-nil
-		tpl.Execute(w, templateContainer{DBRows: rows})
+		if len(rows) > 0 {
+			fmt.Printf("Number of rows %v.\n", len(rows))
+			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("repos.html")) // .Must() panics if err is non-nil
+			tpl.Execute(w, templateContainer{DBRows: rows})
+		} else {
+			fmt.Printf("No rows %v.\n", len(rows))
+		}
 	}
 }
 
