@@ -4,3 +4,4 @@ repos/
 builds/
 db.go*
 main.exe
+.realize
