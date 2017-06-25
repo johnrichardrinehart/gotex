@@ -42,7 +42,7 @@ func main() {
 	// serve built files
 	r.Get("/builds/*", http.StripPrefix("/builds/", http.FileServer(http.Dir("builds"))).ServeHTTP)
 	// catch all
-	r.Get("/*", indexHandler)
+	vestigo.CustomNotFoundHandlerFunc(indexHandler)
 	// if it's the home page or some undefined route
 	fmt.Printf("Listening on address %v.\n", *addrFlag)
 	http.ListenAndServe(*addrFlag, r)
