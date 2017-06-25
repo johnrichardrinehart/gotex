@@ -13,17 +13,17 @@
         <!--loop through the number of compilations-->
         <div id="app" class="container-fluid">
             <div class="row" id="heading">
-                <div class="col-xs-2 text-center" style="display:inline">
+                <div class="col-xs-2 text-center">
                     <p> Timestamp </p>
                     <canvas id="canvas-ts" class="arrows"></canvas>
                 </div>
                 <div class="col-xs-2 text-center">
                     <p>Commit ID</p>
-                    <canvas id="canvas-ts" class="arrows"></canvas>
+                    <canvas id="canvas-id" class="arrows"></canvas>
                 </div>
                 <div class="col-xs-2 text-center">
                     <p>Username</p>
-                    <canvas id="canvas-ts" class="arrows"></canvas>
+                    <canvas id="canvas-un" class="arrows"></canvas>
                 </div>
                 <div class="col-xs-2 text-center">
                     <p>Compiled PDF</p>
@@ -88,6 +88,7 @@
                     cts.height = 22;
 
                     var ctx = cts.getContext('2d');
+                    ctx.fillStyle = '#ccc'
 
                     ctx.beginPath();
                     ctx.moveTo(0, 10);
