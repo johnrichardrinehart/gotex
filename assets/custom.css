@@ -36,8 +36,23 @@ a:hover {
    text-decoration: none;
 }
 
-#heading > div {
-   color: #ccc;
+/*#heading > div {*/
+   /*color: #ccc;*/
+   /*border-bottom: 1px solid;*/
+   /*font-size: 2rem;*/
+/*}*/
+
+#heading {
    border-bottom: 1px solid;
-   font-size: 2rem;
+   border-radius: 0;
+}
+
+#heading > div {
+    font-size: 2rem;
+}
+
+canvas, p {
+    display: inline;
+    margin-left: 5px;
+    vertical-align: middle;
 }
