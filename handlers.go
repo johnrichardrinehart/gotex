@@ -40,10 +40,11 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		)
 		if len(rows) > 0 {
 			fmt.Printf("Number of rows %v.\n", len(rows))
-			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("repos.html")) // .Must() panics if err is non-nil
+			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("assets/repos.html")) // .Must() panics if err is non-nil
 			tpl.Execute(w, templateContainer{DBRows: rows})
 		} else {
-			fmt.Printf("No rows %v.\n", len(rows))
+			indexHandler(w, r)
+			fmt.Printf("No rows.\n")
 		}
 	}
 }
@@ -56,4 +57,9 @@ func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		go compile(h, ch)
 		go addRows(d, ch)
 	}
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.New("index.html").Delims("[[", "]]").ParseFiles("assets/index.html")) // .Must() panics if err is non-nil
+	tpl.Execute(w, nil)
 }

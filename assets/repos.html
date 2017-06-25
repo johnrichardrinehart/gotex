@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Repos</title>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="/assets/custom.css">
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+        <!--<script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js"></script>-->
+        <script src="https://vuejs.org/js/vue.min.js"></script>
+    </head>
+    <body>
+        <!--loop through the number of compilations-->
+        <div id="app" class="container-fluid">
+            <div class="row" id="heading">
+                <div class="col-xs-2 text-center">
+                    <p> Timestamp </p>
+                    <canvas id="canvas-ts" class="arrows"></canvas>
+                </div>
+                <div class="col-xs-2 text-center">
+                    <p>Commit ID</p>
+                    <canvas id="canvas-id" class="arrows"></canvas>
+                </div>
+                <div class="col-xs-2 text-center">
+                    <p>Username</p>
+                    <canvas id="canvas-un" class="arrows"></canvas>
+                </div>
+                <div class="col-xs-2 text-center">
+                    <p>Compiled PDF</p>
+                </div>
+                <div class="col-xs-2 text-center">
+                    <p>Log File</p>
+                </div>
+                <div class="col-xs-2 text-center">
+                    <p>Diff PDF</p>
+                </div>
+            </div>
+            <div class="row" v-for="row in rows">
+                <div class="col-xs-2 text-center">{{row.Timestamp}}</div>
+                <div class="col-xs-2 text-center">
+                    <a :href=row.URL :title=row.Message>
+                        {{row.ID | abbreviate(8) }}
+                    </a>
+                </div>
+                <div class="col-xs-2 text-center" :title=row.RealName>{{row.UserName}}</div>
+                <div class="col-xs-2 text-center">
+                    <a :href=row.PDFName>
+                        <!--<a :href=row.PDFName :title=row.PDFName|filename>-->
+                        {{row.PDFName | filename }}
+                        </a>
+                </div>
+                <div class="col-xs-2 text-center">
+                    <a :href=row.LogName>
+                        <!--<a :href=row.LogName :title=row.LogName|filename>-->
+                        {{row.LogName | filename }}
+                        </a>
+                </div>
+                <div class="col-xs-2 text-center">
+                    <a :href=row.DiffName>
+                        <!--<a :href=row.DiffName :title=row.DiffName|filename>-->
+                        {{row.DiffName | filename }}
+                        </a>
+                </div>
+            </div>
+        </div>
+        <script>
+            v = new Vue({
+                el: '#app',
+                data: {
+                    rows: [[.DBRows]]
+                },
+                filters: {
+                    abbreviate: function(s,n) {
+                        return s.slice(0,n)
+                    },
+                    filename: function(s) {
+                        return s.split('/').slice(-1)[0]
+                    }
+                }
+            })
+        </script>
+    </body>
+    <script src="/assets/drawArrows.js"></script>
+    <script src="/assets/sort.js"></script>
+</html>
