@@ -73,7 +73,7 @@ func getRows(db *sql.DB, d string, u string, p string) []*parser.DBRow {
 			ID:        id,
 			Message:   message,
 			URL:       url,
-			UserName:  username,
+			Username:  username,
 			RealName:  realname,
 			PDFName:   pdfname,
 			LogName:   logname,
@@ -135,7 +135,7 @@ func addRows(db *sql.DB, c chan []*parser.DBRow) {
 			logger.Warning.Printf("I've already added row with commit hash %v to the database.\n", r.ID)
 			removeIdxs = append(removeIdxs, i)
 		} else {
-			_, err := istmt.Exec(r.Timestamp, r.ID, r.Message, r.URL, r.UserName, r.RealName, r.PDFName, r.LogName, r.DiffName, r.Path)
+			_, err := istmt.Exec(r.Timestamp, r.ID, r.Message, r.URL, r.Username, r.RealName, r.PDFName, r.LogName, r.DiffName, r.Path)
 			if err != nil {
 				panic(err)
 			}

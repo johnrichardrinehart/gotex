@@ -17,7 +17,7 @@ type DBRow struct {
 	ID        string
 	URL       string
 	Message   string
-	UserName  string
+	Username  string
 	RealName  string
 	PDFName   string
 	LogName   string
@@ -47,7 +47,7 @@ func ParseHook(r *http.Request) []*DBRow {
 				ID:        c.ID,
 				URL:       c.URL,
 				Message:   c.Message,
-				UserName:  c.Author.UserName,
+				Username:  c.Author.Username,
 				RealName:  c.Author.RealName,
 				Path:      u.Hostname() + u.Path,
 				TeXRoot:   r.URL.Query().Get("root"), // in the Query
@@ -72,8 +72,8 @@ func ParseHook(r *http.Request) []*DBRow {
 				ID:        c.ID,
 				URL:       c.URL,
 				Message:   c.Message,
-				UserName:  c.Author.UserName,
-				RealName:  c.Author.UserName, // gitlab has no RealName
+				Username:  c.Author.Username,
+				RealName:  c.Author.Username, // gitlab has no RealName
 				Path:      u.Hostname() + u.Path,
 				TeXRoot:   r.URL.Query().Get("root"), // in the Query
 			}

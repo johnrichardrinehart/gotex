@@ -16,7 +16,7 @@ type commit struct {
 }
 
 type author struct {
-	UserName string `json:"name"`
+	Username string `json:"name"`
 }
 
 type repo struct {

@@ -34,7 +34,7 @@ type commit struct {
 }
 
 type author struct {
-	UserName string `json:"username"`
+	Username string `json:"username"`
 	RealName string `json:"name"`
 }
 
