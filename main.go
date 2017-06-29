@@ -35,13 +35,16 @@ func init() {
 	if err := os.MkdirAll("assets", os.ModePerm); err != nil {
 		logger.Error.Println(err)
 	}
-	// taken from
-	// https://stackoverflow.com/questions/11692860/how-can-i-efficiently-download-a-large-file-using-go
-	grabAsset("repos.html")
-	grabAsset("index.html")
-	grabAsset("custom.css")
-	grabAsset("drawArrows.js")
-	grabAsset("sort.js")
+	assets := []string{
+		"repos.html",
+		"index.html",
+		"custom.css",
+		"drawArrows.js",
+		"sort.js",
+	}
+	for _, asset := range assets {
+		grabAsset(asset)
+	}
 }
 
 func main() {
@@ -76,6 +79,8 @@ func main() {
 }
 
 func grabAsset(path string) {
+	// taken from
+	// https://stackoverflow.com/questions/11692860/how-can-i-efficiently-download-a-large-file-using-go
 	file := fmt.Sprintf("assets/%v", path)
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		out, _ := os.Create(file)
