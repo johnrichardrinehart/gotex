@@ -2,12 +2,9 @@ package main
 
 import (
 	"database/sql"
-	//"encoding/json"
-	"fmt"
 	"github.com/fuzzybear3965/gotex/internal/parser"
 	"github.com/husobee/vestigo"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,7 +23,7 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		// Get the directory where this is running
 		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
-			log.Fatal(err)
+			logger.Print(err)
 		}
 		os.Chdir(dir)           // change to path to run command
 		defer os.Chdir(curPath) // go back to where we started
@@ -39,19 +36,19 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			vestigo.Param(r, "repo"),
 		)
 		if len(rows) > 0 {
-			fmt.Printf("Number of rows %v.\n", len(rows))
+			logger.Printf("Number of rows %v.\n", len(rows))
 			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("assets/repos.html")) // .Must() panics if err is non-nil
 			tpl.Execute(w, templateContainer{DBRows: rows})
 		} else {
 			indexHandler(w, r)
-			fmt.Printf("No rows.\n")
+			logger.Printf("No rows.\n")
 		}
 	}
 }
 
 func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Received a post request.")
+		logger.Println("Received a post request.")
 		h := parser.ParseHook(r) // parse the webhook into a container h
 		ch := make(chan []*parser.DBRow)
 		go compile(h, ch)

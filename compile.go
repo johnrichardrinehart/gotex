@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"bufio"
 	"fmt"
 	"github.com/fuzzybear3965/gotex/internal/parser"
 	"net/url"
@@ -14,7 +13,7 @@ func compile(rows []*parser.DBRow, c chan []*parser.DBRow) {
 	last := len(rows) - 1
 	for i := range rows {
 		row := rows[last-i]
-		fmt.Printf("\tWorking on commit %v.\n", row.ID)
+		logger.Printf("\tWorking on commit %v.\n", row.ID)
 		initRepo(row)
 		// Now we need to:
 		// 1) Check out the commit previous to this row (if it exists)
@@ -48,74 +47,72 @@ func compile(rows []*parser.DBRow, c chan []*parser.DBRow) {
 		// Work on the diff PDF
 		if exist, err := exists(diffPDF); !exist && err == nil {
 			// 1) check out the previous commit (if possible)
-			fmt.Println("Checking out the previous commit.")
+			logger.Println("Checking out the previous commit.")
 			if !runCommand(exec.Command("git", "checkout", fmt.Sprintf("%v~1", row.ID)), repopath) {
-				fmt.Println("Couldn't check out previous commit (maybe first commit?)")
+				logger.Println("Couldn't check out previous commit (maybe first commit?)")
 			}
 
-			fmt.Println("Changing the name of the root tex file (for diffing).")
+			logger.Println("Changing the name of the root tex file (for diffing).")
 			// 2) change repos/a/b/main.tex -> repos/a/b/<sha-1>.tex
 			if err := os.Rename(fmt.Sprintf("repos/%v/%v.tex", row.Path, row.TeXRoot), fmt.Sprintf("repos/%v/%v", row.Path, oldTeX)); err != nil {
 				panic(err)
 			}
-			fmt.Printf("Checking out commit %v.\n", row.ID)
+			logger.Printf("Checking out commit %v.\n", row.ID)
 			// 3) check out this row's commit
 			if !runCommand(exec.Command("git", "checkout", fmt.Sprintf("%v", row.ID)), repopath) {
-				fmt.Println("Couldn't check out this commit.")
+				logger.Println("Couldn't check out this commit.")
 			}
 
-			fmt.Printf("Generating diff LaTeX file.\n")
+			logger.Printf("Generating diff LaTeX file.\n")
 			// 4) Generate diff tex
 			if !runCommand(exec.Command("latexdiff", oldTeX, curTeX, ">", diffTeX), repopath) {
-				fmt.Printf("latexdiff failed on commit %v.\n", row.ID)
+				logger.Printf("latexdiff failed on commit %v.\n", row.ID)
 			}
 
-			fmt.Printf("Generating diff pdf.\n")
+			logger.Printf("Generating diff pdf.\n")
 			// 5) Generate diff pdf
 			if !runCommand(exec.Command("latexmk", append(latexmkArgs, diffTeX)...), repopath) {
-				fmt.Println("latexmk the diff failed")
+				logger.Println("latexmk the diff failed")
 			}
 
 			// Rename the diff pdf
 			if err := os.Rename(fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot), diffPDF); err != nil {
-				fmt.Printf("Could not rename the diff pdf %v.\n", row.TeXRoot)
+				logger.Printf("Could not rename the diff pdf %v.\n", row.TeXRoot)
 			}
 
 			// move the diff pdf
 			if err := os.Rename(fmt.Sprintf("repos/%v/%v.diff.pdf", row.Path, row.TeXRoot), fmt.Sprintf("build/%v/%v/%v.diff.pdf", row.Path, row.ID, row.TeXRoot)); err != nil {
-				fmt.Printf("Could not move file %v.\n", diffTeX)
+				logger.Printf("Could not move file %v.\n", diffTeX)
 			}
 		} else {
-			fmt.Printf("I've already generated %v.\n", diffPDF)
+			logger.Printf("I've already generated %v.\n", diffPDF)
 		}
 
-		fmt.Println(rootPDF)
-		fmt.Println(exists(rootPDF))
 		if exist, err := exists(rootPDF); !exist && err == nil {
-			fmt.Printf("Building root PDF file.\n")
+			logger.Printf("Building root PDF file.\n")
 			// 6) Build current LaTeX file
 			if !runCommand(exec.Command("latexmk", append(latexmkArgs, curTeX)...), repopath) {
-				fmt.Printf("latexmk %v failed.\n", row.TeXRoot)
+				logger.Printf("latexmk %v failed.\n", row.TeXRoot)
 			}
 
 			// 7) move everything
 			// move the current pdf
 			if err := os.Rename(fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot), fmt.Sprintf("builds/%v/%v/%v.pdf", row.Path, row.ID, row.TeXRoot)); err != nil {
-				fmt.Printf("Could not move file %v.\n", fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot))
+				logger.Printf("Could not move file %v.\n", fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot))
 			}
 
 			// move the log file
 			if err := os.Rename(fmt.Sprintf("repos/%v/%v.log", row.Path, row.TeXRoot), fmt.Sprintf("builds/%v/%v/%v.log", row.Path, row.ID, row.TeXRoot)); err != nil {
-				fmt.Printf("Could not move file %v.\n", fmt.Sprintf("repos/%v/%v.log", row.Path, row.TeXRoot))
+				logger.Printf("Could not move file %v.\n", fmt.Sprintf("repos/%v/%v.log", row.Path, row.TeXRoot))
 			}
 		} else {
-			fmt.Printf("I've already generated %v.\n", rootPDF)
+			logger.Printf("I've already generated %v.\n", rootPDF)
 		}
 		// Clean the repo
 		if !runCommand(exec.Command("git", "clean", "-f"), repopath) {
-			fmt.Println("git clean failed.")
+			logger.Println("git clean failed.")
 		}
-		fmt.Printf("\n")
+		logger.Printf("\n")
 	}
 	c <- rows
 }
@@ -129,12 +126,12 @@ func runCommand(c *exec.Cmd, p string) bool {
 	defer os.Chdir(curPath) // go back to where we started
 	// below taken from https://stackoverflow.com/questions/10385551/get-exit-code-go
 	if err := c.Start(); err != nil {
-		fmt.Printf("c.Start: %v", err)
+		logger.Printf("c.Start: %v", err)
 	}
 	if _, err := os.Getwd(); err != nil {
 		panic(err)
 	} else {
-		//fmt.Printf("Running %v at %v.\n", c.Args, wd)
+		//logger.Printf("Running %v at %v.\n", c.Args, wd)
 	}
 	if err := c.Wait(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
@@ -145,11 +142,11 @@ func runCommand(c *exec.Cmd, p string) bool {
 			// defined for both Unix and Windows and in both cases has
 			// an ExitStatus() method with the same signature.
 			if s := exiterr.Success(); !s {
-				//fmt.Printf("%v failed.\n\n", c.Args)
+				//logger.Printf("%v failed.\n\n", c.Args)
 				return false
 			}
 		} else {
-			//fmt.Printf("%v encountered an error: %v.\n\n", c.Args, err)
+			//logger.Printf("%v encountered an error: %v.\n\n", c.Args, err)
 			return false
 		}
 	}
