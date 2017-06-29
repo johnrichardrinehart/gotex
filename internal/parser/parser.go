@@ -2,9 +2,7 @@ package parser
 
 import (
 	"encoding/json"
-	//"fmt"
 	//"github.com/fuzzybear3965/gotex/internal/bitbucket"
-	//"github.com/fuzzybear3965/gotex/internal/commits"
 	"github.com/fuzzybear3965/gotex/internal/github"
 	"github.com/fuzzybear3965/gotex/internal/gitlab"
 	"net/http"
