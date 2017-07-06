@@ -28,7 +28,7 @@ func migrate(db *sql.DB) {
 	timestamp VARCHAR NOT NULL,
 	id VARCHAR NOT NULL,
 	url VARCHAR NOT NULL,
-	branch VARCHAR NOT NULL,
+	branch VARCHAR,
 	message VARCHAR,
 	username VARCHAR NOT NULL,
 	realname VARCHAR NOT NULL,
@@ -43,43 +43,53 @@ func migrate(db *sql.DB) {
 	_, err := db.Exec(sql)
 
 	if err != nil {
-		panic(err)
+		logger.Fatal.Println(err)
 	}
 }
 
-func getRows(db *sql.DB, d string, u string, p string) []*parser.Commit {
-	// d = domain (github.com)
-	// u = user (fuzzybear3965)
-	// p = project (gotex)
-	logger.Info.Printf("Grabbing rows for %v/%v/%v.\n", d, u, p)
-	path := fmt.Sprintf("%v/%v/%v", d, u, p) // maybe %v
-	stmt, err := db.Prepare(`SELECT timestamp, id, message, url, username, realname, pdfname, logname, diffname FROM latex_builds WHERE path = $1`)
+// d = domain (e.g. github.com)
+// u = user (e.g. fuzzybear3965)
+// p = project (e.g. gotex)
+// b = branch (e.g. master)
+func getRows(db *sql.DB, d string, u string, r string, b string) []*parser.Commit {
+	// where are these files stored?
+	path := fmt.Sprintf("%v/%v/%v", d, u, r) // maybe %v
+	// if they want a specific branch...
+	if b != "" {
+		logger.Info.Printf("Grabbing rows for %v/%v/%v and branch %v.\n", d, u, r, b)
+	} else {
+		logger.Info.Printf("Grabbing rows for %v/%v/%v.\n", d, u, r)
+	}
+	stmt, err := db.Prepare(`SELECT timestamp, id, url, branch, message, username, realname, pdfname, logname, diffname FROM latex_builds WHERE path = $1`)
 	defer stmt.Close()
 	if err != nil {
-		panic(err)
+		logger.Fatal.Println(err)
 	}
 	rows, err := stmt.Query(path)
 	defer rows.Close()
 	// make a container of rows that will be returned
 	var dbRows []*parser.Commit
 	// make containers for the scanned variables
-	var timestamp, id, message, url, username, realname, pdfname, logname, diffname string
+	var timestamp, id, url, branch, message, username, realname, pdfname, logname, diffname string
 	for rows.Next() {
-		err := rows.Scan(&timestamp, &id, &message, &url, &username, &realname, &pdfname, &logname, &diffname)
+		err := rows.Scan(&timestamp, &id, &url, &branch, &message, &username, &realname, &pdfname, &logname, &diffname)
 		if err != nil {
-			panic(err)
+			logger.Fatal.Println(err)
 		}
-		dbRows = append(dbRows, &parser.Commit{
-			Timestamp: timestamp,
-			ID:        id,
-			Message:   message,
-			URL:       url,
-			Username:  username,
-			RealName:  realname,
-			PDFName:   pdfname,
-			LogName:   logname,
-			DiffName:  diffname,
-		})
+		if b == "" || b == branch {
+			dbRows = append(dbRows, &parser.Commit{
+				Timestamp: timestamp,
+				ID:        id,
+				URL:       url,
+				Branch:    branch,
+				Message:   message,
+				Username:  username,
+				RealName:  realname,
+				PDFName:   pdfname,
+				LogName:   logname,
+				DiffName:  diffname,
+			})
+		}
 	}
 	return dbRows
 }
@@ -89,13 +99,15 @@ func addRows(db *sql.DB, c chan []*parser.Commit) {
 	h := <-c
 	logger.Info.Println("\nReceived", len(h), "rows to process.")
 	qstmt, err := db.Prepare(`SELECT * FROM latex_builds WHERE id = ? and path = ?`)
-	istmt, err := db.Prepare(`INSERT INTO latex_builds(timestamp, id, message, url, username, realname, pdfname, logname, diffname, path) values(?,?,?,?,?,?,?,?,?,?)`)
 	defer qstmt.Close()
+	if err != nil {
+		logger.Fatal.Println(err)
+	}
+	istmt, err := db.Prepare(`INSERT INTO latex_builds(timestamp, id, url, branch, message, username, realname, pdfname, logname, diffname, path) values(?,?,?,?,?,?,?,?,?,?,?)`)
 	defer istmt.Close()
 	if err != nil {
-		panic(err)
+		logger.Fatal.Println(err)
 	}
-
 	// Check if we already have any of these rows
 	// Loop over the rows to add
 	commitNumber := 0
@@ -127,7 +139,7 @@ func addRows(db *sql.DB, c chan []*parser.Commit) {
 		rows, err := qstmt.Query(r.ID, r.Path)
 		defer rows.Close()
 		if err != nil {
-			panic(err)
+			logger.Fatal.Println(err)
 		}
 		// if we have matches the store this index to clean up h later
 		if rows.Next() {
@@ -136,11 +148,10 @@ func addRows(db *sql.DB, c chan []*parser.Commit) {
 			logger.Warning.Printf("I've already added row with commit hash %v to the database.\n", r.ID)
 			removeIdxs = append(removeIdxs, i)
 		} else {
-			_, err := istmt.Exec(r.Timestamp, r.ID, r.Message, r.URL, r.Username, r.RealName, r.PDFName, r.LogName, r.DiffName, r.Path)
+			_, err := istmt.Exec(r.Timestamp, r.ID, r.URL, r.Branch, r.Message, r.Username, r.RealName, r.PDFName, r.LogName, r.DiffName, r.Path)
 			if err != nil {
-				panic(err)
+				logger.Fatal.Println(err)
 			}
-			// Compile the document and, if successful, log the row to the database
 		}
 	}
 	for i := len(removeIdxs) - 1; i >= 0; i-- {

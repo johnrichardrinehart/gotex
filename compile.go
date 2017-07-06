@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 )
 
-func compile(rows []*parser.Commit, c chan []*parser.Commit, qs url.Values) {
+func compile(rows []*parser.Commit, c chan []*parser.Commit) {
 	last := len(rows) - 1
 	for i := range rows {
 		row := rows[last-i]
-		logger.Info.Printf("\tWorking on commit %v.\n", row.ID)
+		logger.Info.Printf("-- Compiling on commit %v.--\n", row.ID)
 		initRepo(row)
 		// Now we need to:
 		// 1) Check out the commit previous to this row (if it exists)
@@ -54,8 +54,8 @@ func compile(rows []*parser.Commit, c chan []*parser.Commit, qs url.Values) {
 
 			logger.Info.Println("Changing the name of the root tex file (for diffing).")
 			// 2) change repos/a/b/main.tex -> repos/a/b/<sha-1>.tex
-			if err := os.Rename(fmt.Sprintf("repos/%v/%v.tex", row.Path, row.TeXRoot), fmt.Sprintf("repos/%v/%v", row.Path, oldTeX)); err != nil {
-				panic(err)
+			if err := os.Rename(filepath.Join(WORKINGDIR, "repos", row.Path, fmt.Sprintf("%v.tex", row.TeXRoot)), filepath.Join(WORKINGDIR, "repos", row.Path, fmt.Sprintf("%v.tex", oldTeX))); err != nil {
+				logger.Fatal.Println(err)
 			}
 			logger.Info.Printf("Checking out commit %v.\n", row.ID)
 			// 3) check out this row's commit
@@ -76,12 +76,12 @@ func compile(rows []*parser.Commit, c chan []*parser.Commit, qs url.Values) {
 			}
 
 			// Rename the diff pdf
-			if err := os.Rename(fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot), diffPDF); err != nil {
+			if err := os.Rename(filepath.Join(WORKINGDIR, "repos", row.Path, fmt.Sprintf("%v.pdf", row.TeXRoot)), filepath.Join(WORKINGDIR, diffPDF)); err != nil {
 				logger.Error.Printf("Could not rename the diff pdf %v for commit %v.\n", row.TeXRoot, row.ID)
 			}
 
 			// move the diff pdf
-			if err := os.Rename(fmt.Sprintf("repos/%v/%v.diff.pdf", row.Path, row.TeXRoot), fmt.Sprintf("build/%v/%v/%v.diff.pdf", row.Path, row.ID, row.TeXRoot)); err != nil {
+			if err := os.Rename(filepath.Join(WORKINGDIR, "repos", row.Path, fmt.Sprintf("%vdiff.pdf", row.TeXRoot)), filepath.Join(WORKINGDIR, "build", row.Path, row.ID, fmt.Sprintf("%v.diff.pdf", row.TeXRoot))); err != nil {
 				logger.Error.Printf("Could not move file %v on commit %v.\n", diffTeX, row.ID)
 			}
 		} else {
@@ -97,12 +97,12 @@ func compile(rows []*parser.Commit, c chan []*parser.Commit, qs url.Values) {
 
 			// 7) move everything
 			// move the current pdf
-			if err := os.Rename(fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot), fmt.Sprintf("builds/%v/%v/%v.pdf", row.Path, row.ID, row.TeXRoot)); err != nil {
+			if err := os.Rename(filepath.Join(WORKINGDIR, "repos", row.Path, fmt.Sprintf("%v.pdf", row.TeXRoot)), filepath.Join(WORKINGDIR, "builds", row.Path, row.ID, fmt.Sprintf("%v.pdf", row.TeXRoot))); err != nil {
 				logger.Error.Printf("Could not move file %v.\n", fmt.Sprintf("repos/%v/%v.pdf", row.Path, row.TeXRoot))
 			}
 
 			// move the log file
-			if err := os.Rename(fmt.Sprintf("repos/%v/%v.log", row.Path, row.TeXRoot), fmt.Sprintf("builds/%v/%v/%v.log", row.Path, row.ID, row.TeXRoot)); err != nil {
+			if err := os.Rename(filepath.Join(WORKINGDIR, "repos", row.Path, fmt.Sprintf("%v.log", row.TeXRoot)), filepath.Join(WORKINGDIR, "builds", row.Path, row.ID, fmt.Sprintf("%v.log", row.TeXRoot))); err != nil {
 				logger.Error.Printf("Could not move file %v.\n", fmt.Sprintf("repos/%v/%v.log", row.Path, row.TeXRoot))
 			}
 		} else {

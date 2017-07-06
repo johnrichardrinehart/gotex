@@ -31,8 +31,8 @@ var addrFlag = flag.String("address", "127.0.0.1:8080", "listening address and p
 var logFlag = flag.String("logfile", "gotex.log", "log filename\n\t")
 var debugFlag = flag.Bool("debug", false, "debug?")
 
-func init() {
-}
+// grab the working directory for renaming files
+var WORKINGDIR, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 
 func main() {
 	flag.Parse()
@@ -47,6 +47,7 @@ func main() {
 	r.Get("/", rootHandler)
 	// if it's a repo page
 	r.Get("/:domain/:user/:repo", getHandler(db))
+	r.Get("/:domain/:user/:repo/:branch", getHandler(db))
 	r.Post("/:domain/:user/:repo", postHandler(db))
 	// serve asset files
 	r.Get("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))).ServeHTTP)
@@ -55,11 +56,7 @@ func main() {
 	// catch all
 	vestigo.CustomNotFoundHandlerFunc(defaultHandler)
 	// if it's the home page or some undefined route
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		logger.Error.Println(err)
-	}
-	logger.Info.Printf("----- gotex started: Listening on address %v in directory %v. -----\n", *addrFlag, dir)
+	logger.Info.Printf("----- gotex started: Listening on address %v in directory %v. -----\n", *addrFlag, WORKINGDIR)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -69,7 +66,9 @@ func main() {
 		os.Exit(0)
 	}()
 
-	http.ListenAndServe(*addrFlag, r)
+	if err := http.ListenAndServe(*addrFlag, r); err != nil {
+		logger.Fatal.Println(err)
+	}
 }
 
 func grabAsset(path string) {

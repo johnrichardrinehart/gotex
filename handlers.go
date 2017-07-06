@@ -6,23 +6,11 @@ import (
 	"github.com/husobee/vestigo"
 	"html/template"
 	"net/http"
-	"os"
 	"path/filepath"
 )
 
 func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		curPath, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-		// Get the directory where this is running
-		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-		if err != nil {
-			logger.Error.Print(err)
-		}
-		os.Chdir(dir)           // change to path to run command
-		defer os.Chdir(curPath) // go back to where we started
 		//TODO: render the template immediately and serve the rows over WebSockets
 		w.WriteHeader(200)
 		rows := getRows(
@@ -30,14 +18,24 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			vestigo.Param(r, "domain"),
 			vestigo.Param(r, "user"),
 			vestigo.Param(r, "repo"),
+			vestigo.Param(r, "branch"),
 		)
 		if len(rows) > 0 {
 			logger.Debug.Printf("Number of rows %v.\n", len(rows))
-			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("assets/repos.html")) // .Must() panics if err is non-nil
+			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles(filepath.Join(WORKINGDIR, "assets/repos.html"))) // .Must() panics if err is non-nil
+			// if the user actually came here to view a single
+			// branch's data
+			show_branches := false
+			// unless it isn't
+			if vestigo.Param(r, "branch") == "" {
+				show_branches = true
+			}
 			data := struct {
-				DBRows []*parser.Commit
+				DBRows           []*parser.Commit
+				ShowBranchesBool bool
 			}{
 				rows,
+				show_branches,
 			}
 			tpl.Execute(w, data)
 		} else {
@@ -50,11 +48,15 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug.Println("Received a post request.")
-		queries = r.URL.Query()
-		h := parser.ParseHook(r) // parse webhook obtaining a []*parser.Commit h
-		ch := make(chan []*parser.Commit)
-		go compile(h, ch, queries)
-		go addRows(d, ch)
+		queries := r.URL.Query()
+		h := parser.ParseHook(r, queries) // parse webhook obtaining a []*parser.Commit h or nil
+		if h != nil {
+			ch := make(chan []*parser.Commit)
+			go compile(h, ch)
+			go addRows(d, ch)
+		} else {
+			logger.Debug.Println("parser returned nil. Branch possibly isn't supported.")
+		}
 	}
 }
 
@@ -64,6 +66,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
-	tpl := template.Must(template.New("default.html").Delims("[[", "]]").ParseFiles("assets/default.html")) // .Must() panics if err is non-nil
+	// grab the working directory for renaming files
+	tpl := template.Must(template.New("default.html").Delims("[[", "]]").ParseFiles(filepath.Join(WORKINGDIR, "assets/default.html"))) // .Must() panics if err is non-nil
 	tpl.Execute(w, nil)
 }
