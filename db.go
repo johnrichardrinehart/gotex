@@ -46,7 +46,7 @@ func migrate(db *sql.DB) {
 	}
 }
 
-func getRows(db *sql.DB, d string, u string, p string) []*parser.DBRow {
+func getRows(db *sql.DB, d string, u string, p string) []*parser.Commit {
 	// d = domain (github.com)
 	// u = user (fuzzybear3965)
 	// p = project (gotex)
@@ -60,7 +60,7 @@ func getRows(db *sql.DB, d string, u string, p string) []*parser.DBRow {
 	rows, err := stmt.Query(path)
 	defer rows.Close()
 	// make a container of rows that will be returned
-	var dbRows []*parser.DBRow
+	var dbRows []*parser.Commit
 	// make containers for the scanned variables
 	var timestamp, id, message, url, username, realname, pdfname, logname, diffname string
 	for rows.Next() {
@@ -68,7 +68,7 @@ func getRows(db *sql.DB, d string, u string, p string) []*parser.DBRow {
 		if err != nil {
 			panic(err)
 		}
-		dbRows = append(dbRows, &parser.DBRow{
+		dbRows = append(dbRows, &parser.Commit{
 			Timestamp: timestamp,
 			ID:        id,
 			Message:   message,
@@ -84,7 +84,7 @@ func getRows(db *sql.DB, d string, u string, p string) []*parser.DBRow {
 }
 
 // addRows accepts as arguments 1) db in which to store rows and 2) an array of rows to add
-func addRows(db *sql.DB, c chan []*parser.DBRow) {
+func addRows(db *sql.DB, c chan []*parser.Commit) {
 	h := <-c
 	logger.Info.Println("\nReceived", len(h), "rows to process.")
 	qstmt, err := db.Prepare(`SELECT * FROM latex_builds WHERE id = ? and path = ?`)

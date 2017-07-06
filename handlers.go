@@ -10,10 +10,6 @@ import (
 	"path/filepath"
 )
 
-type templateContainer struct {
-	DBRows []*parser.DBRow
-}
-
 func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		curPath, err := os.Getwd()
@@ -38,7 +34,12 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		if len(rows) > 0 {
 			logger.Debug.Printf("Number of rows %v.\n", len(rows))
 			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("assets/repos.html")) // .Must() panics if err is non-nil
-			tpl.Execute(w, templateContainer{DBRows: rows})
+			data := struct {
+				DBRows []*parser.Commit
+			}{
+				rows,
+			}
+			tpl.Execute(w, data)
 		} else {
 			defaultHandler(w, r)
 			logger.Debug.Printf("No rows.\n")
@@ -50,7 +51,7 @@ func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug.Println("Received a post request.")
 		h := parser.ParseHook(r) // parse the webhook into a container h
-		ch := make(chan []*parser.DBRow)
+		ch := make(chan []*parser.Commit)
 		go compile(h, ch)
 		go addRows(d, ch)
 	}

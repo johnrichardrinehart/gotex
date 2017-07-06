@@ -10,8 +10,7 @@ import (
 	"strings"
 )
 
-// TODO: Change DBRow for another name (it's not in db.go)
-type DBRow struct {
+type Commit struct {
 	Timestamp string
 	ID        string
 	URL       string
@@ -26,7 +25,7 @@ type DBRow struct {
 	TeXRoot   string // root name of the main LaTeX file
 }
 
-func ParseHook(r *http.Request) []*DBRow {
+func ParseHook(r *http.Request) []*Commit {
 	d := strings.Split(r.URL.Path, "/")[1] // /github.com/a/b -> github.com
 	// Decode the JSON body into the appropriate struct
 	if d == "github.com" {
@@ -40,10 +39,10 @@ func ParseHook(r *http.Request) []*DBRow {
 			panic(err)
 		}
 		// restruct the array of commits into a general purpose container
-		h := make([]*DBRow, len(p.Commits))
+		h := make([]*Commit, len(p.Commits))
 		//fmt.Printf("%+v", r.URL.Query())
 		for idx, c := range p.Commits {
-			h[idx] = &DBRow{
+			h[idx] = &Commit{
 				Timestamp: c.Timestamp,
 				ID:        c.ID,
 				URL:       c.URL,
@@ -67,10 +66,10 @@ func ParseHook(r *http.Request) []*DBRow {
 			panic(err)
 		}
 		// restruct the array of commits into a general purpose container
-		h := make([]*DBRow, len(p.Commits))
+		h := make([]*Commit, len(p.Commits))
 		//fmt.Printf("%+v", r.URL.Query())
 		for idx, c := range p.Commits {
-			h[idx] = &DBRow{
+			h[idx] = &Commit{
 				Timestamp: c.Timestamp,
 				ID:        c.ID,
 				URL:       c.URL,
@@ -85,9 +84,9 @@ func ParseHook(r *http.Request) []*DBRow {
 		return h
 	} else if d == "bitbucket.com" {
 		//var p bitbucket.PushEvent
-		return make([]*DBRow, 5)
+		return make([]*Commit, 5)
 	} else {
-		return make([]*DBRow, 5)
+		return make([]*Commit, 5)
 		// TODOs
 		// 1) log the fact that we accessed an unsupported domain.
 		// 2) Return a page to the user that suggests they contact the CI admin to

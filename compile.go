@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func compile(rows []*parser.DBRow, c chan []*parser.DBRow) {
+func compile(rows []*parser.Commit, c chan []*parser.Commit) {
 	last := len(rows) - 1
 	for i := range rows {
 		row := rows[last-i]
@@ -164,7 +164,7 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-func initRepo(row *parser.DBRow) {
+func initRepo(row *parser.Commit) {
 	//buildPath := filepath.Join("./builds", row.Path, row.ID)
 	err := os.MkdirAll(filepath.Join("./builds", row.Path, row.ID), os.ModePerm)
 	if err != nil {

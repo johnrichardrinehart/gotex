@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 )
 
@@ -31,25 +32,12 @@ var logFlag = flag.String("logfile", "gotex.log", "log filename\n\t")
 var debugFlag = flag.Bool("debug", false, "debug?")
 
 func init() {
-	// make the assets directory if it doesn't already exist
-	if err := os.MkdirAll("assets", os.ModePerm); err != nil {
-		logger.Error.Println(err)
-	}
-	assets := []string{
-		"repos.html",
-		"index.html",
-		"custom.css",
-		"drawArrows.js",
-		"sort.js",
-	}
-	for _, asset := range assets {
-		grabAsset(asset)
-	}
 }
 
 func main() {
 	flag.Parse()
 	logger, logfile := setUpLogger(*logFlag, log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+	grabAssets()
 	// Initialize the database
 	db := initDB("gotex.db")
 	defer db.Close()
@@ -67,7 +55,11 @@ func main() {
 	// catch all
 	vestigo.CustomNotFoundHandlerFunc(defaultHandler)
 	// if it's the home page or some undefined route
-	logger.Info.Printf("----- gotex started: Listening on address %v. -----\n", *addrFlag)
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		logger.Error.Println(err)
+	}
+	logger.Info.Printf("----- gotex started: Listening on address %v in directory %v. -----\n", *addrFlag, dir)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -85,11 +77,39 @@ func grabAsset(path string) {
 	// https://stackoverflow.com/questions/11692860/how-can-i-efficiently-download-a-large-file-using-go
 	file := fmt.Sprintf("assets/%v", path)
 	if _, err := os.Stat(file); os.IsNotExist(err) {
-		out, _ := os.Create(file)
+		out, err := os.Create(file)
 		defer out.Close()
-		resp, _ := http.Get(fmt.Sprintf("https://raw.githubusercontent.com/fuzzybear3965/gotex/master/%v", file))
+		if err != nil {
+			logger.Error.Printf("Could not create asset file assets/%v.", path)
+		}
+		url := fmt.Sprintf("https://raw.githubusercontent.com/fuzzybear3965/gotex/master/%v", file)
+		resp, err := http.Get(url)
 		defer resp.Body.Close()
-		io.Copy(out, resp.Body)
+		if err != nil {
+			logger.Error.Printf("Error downloading asset %v.", url)
+		}
+		if _, err := io.Copy(out, resp.Body); err != nil {
+			logger.Error.Printf("Could not write contents of file %v to %v.", url, path)
+		}
+	}
+}
+
+func grabAssets() {
+	// make the assets directory if it doesn't already exist
+	if err := os.MkdirAll("assets", os.ModePerm); err != nil {
+		logger.Error.Println(err)
+	} else {
+		logger.Debug.Println("Made the assets directory successfully.")
+	}
+	assets := []string{
+		"repos.html",
+		"index.html",
+		"custom.css",
+		"drawArrows.js",
+		"sort.js",
+	}
+	for _, asset := range assets {
+		grabAsset(asset)
 	}
 }
 
