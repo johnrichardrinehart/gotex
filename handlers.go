@@ -40,7 +40,7 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			tpl := template.Must(template.New("repos.html").Delims("[[", "]]").ParseFiles("assets/repos.html")) // .Must() panics if err is non-nil
 			tpl.Execute(w, templateContainer{DBRows: rows})
 		} else {
-			indexHandler(w, r)
+			defaultHandler(w, r)
 			logger.Debug.Printf("No rows.\n")
 		}
 	}
@@ -56,7 +56,12 @@ func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+func rootHandler(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.New("index.html").Delims("[[", "]]").ParseFiles("assets/index.html")) // .Must() panics if err is non-nil
+	tpl.Execute(w, nil)
+}
+
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.New("default.html").Delims("[[", "]]").ParseFiles("assets/default.html")) // .Must() panics if err is non-nil
 	tpl.Execute(w, nil)
 }

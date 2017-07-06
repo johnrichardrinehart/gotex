@@ -55,6 +55,8 @@ func main() {
 	defer db.Close()
 	migrate(db)
 	r := vestigo.NewRouter()
+	// if it's the home page
+	r.Get("/", rootHandler)
 	// if it's a repo page
 	r.Get("/:domain/:user/:repo", getHandler(db))
 	r.Post("/:domain/:user/:repo", postHandler(db))
@@ -63,7 +65,7 @@ func main() {
 	// serve built files
 	r.Get("/builds/*", http.StripPrefix("/builds/", http.FileServer(http.Dir("builds"))).ServeHTTP)
 	// catch all
-	vestigo.CustomNotFoundHandlerFunc(indexHandler)
+	vestigo.CustomNotFoundHandlerFunc(defaultHandler)
 	// if it's the home page or some undefined route
 	logger.Info.Printf("----- gotex started: Listening on address %v. -----\n", *addrFlag)
 	sigs := make(chan os.Signal, 1)
