@@ -1,10 +1,9 @@
 package gitlab
 
 type PushEvent struct {
-	//Repository json_repo `json:"repository"`
-	//HC         json_head_commit `json:"head_commit"`
 	Commits    []*commit `json:"commits"`
 	Repository repo      `json:"repository"`
+	Ref        string    `json:"ref"`
 }
 
 type commit struct {

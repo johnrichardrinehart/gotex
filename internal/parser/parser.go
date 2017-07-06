@@ -10,19 +10,19 @@ import (
 	"strings"
 )
 
-// TODO: Change DBRow for another name (it's not in db.go and has non-exported
-// fields)
+// TODO: Change DBRow for another name (it's not in db.go)
 type DBRow struct {
 	Timestamp string
 	ID        string
 	URL       string
+	Branch    string
 	Message   string
 	Username  string
 	RealName  string
 	PDFName   string
 	LogName   string
 	DiffName  string
-	Path      string
+	Path      string // path to the directory storing this compilation
 	TeXRoot   string // root name of the main LaTeX file
 }
 
@@ -31,10 +31,11 @@ func ParseHook(r *http.Request) []*DBRow {
 	// Decode the JSON body into the appropriate struct
 	if d == "github.com" {
 		// Get the push event
-		p := new(github.PushEvent)
-		json.NewDecoder(r.Body).Decode(p)
+		p := new(github.PushEvent)        // GitHub push event container
+		json.NewDecoder(r.Body).Decode(p) // decoded push event
 		// get the url to be used as the path column (github.com/a/b)
 		u, err := url.Parse(p.Repository.URL)
+		ref := strings.Split(p.Ref, "/")
 		if err != nil {
 			panic(err)
 		}
@@ -46,6 +47,7 @@ func ParseHook(r *http.Request) []*DBRow {
 				Timestamp: c.Timestamp,
 				ID:        c.ID,
 				URL:       c.URL,
+				Branch:    ref[len(ref)-1],
 				Message:   c.Message,
 				Username:  c.Author.Username,
 				RealName:  c.Author.RealName,
@@ -60,6 +62,7 @@ func ParseHook(r *http.Request) []*DBRow {
 		json.NewDecoder(r.Body).Decode(p)
 		// get the url to be used as the path column (github.com/a/b)
 		u, err := url.Parse(p.Repository.URL)
+		ref := strings.Split(p.Ref, "/")
 		if err != nil {
 			panic(err)
 		}
@@ -71,6 +74,7 @@ func ParseHook(r *http.Request) []*DBRow {
 				Timestamp: c.Timestamp,
 				ID:        c.ID,
 				URL:       c.URL,
+				Branch:    ref[len(ref)-1],
 				Message:   c.Message,
 				Username:  c.Author.Username,
 				RealName:  c.Author.Username, // gitlab has no RealName
