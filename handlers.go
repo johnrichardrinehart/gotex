@@ -50,9 +50,10 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug.Println("Received a post request.")
-		h := parser.ParseHook(r) // parse the webhook into a container h
+		queries = r.URL.Query()
+		h := parser.ParseHook(r) // parse webhook obtaining a []*parser.Commit h
 		ch := make(chan []*parser.Commit)
-		go compile(h, ch)
+		go compile(h, ch, queries)
 		go addRows(d, ch)
 	}
 }

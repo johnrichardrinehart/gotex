@@ -27,13 +27,14 @@ func migrate(db *sql.DB) {
 	n INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	timestamp VARCHAR NOT NULL,
 	id VARCHAR NOT NULL,
-	message VARCHAR,
 	url VARCHAR NOT NULL,
+	branch VARCHAR NOT NULL,
+	message VARCHAR,
 	username VARCHAR NOT NULL,
 	realname VARCHAR NOT NULL,
 	pdfname VARCHAR NOT NULL,
-	diffname VARCHAR NOT NULL,
 	logname VARCHAR NOT NULL,
+	diffname VARCHAR NOT NULL,
 	path VARCHAR NOT NULL,
 	UNIQUE(id, path)
     );

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func compile(rows []*parser.Commit, c chan []*parser.Commit) {
+func compile(rows []*parser.Commit, c chan []*parser.Commit, qs url.Values) {
 	last := len(rows) - 1
 	for i := range rows {
 		row := rows[last-i]

@@ -40,7 +40,6 @@ func ParseHook(r *http.Request) []*Commit {
 		}
 		// restruct the array of commits into a general purpose container
 		h := make([]*Commit, len(p.Commits))
-		//fmt.Printf("%+v", r.URL.Query())
 		for idx, c := range p.Commits {
 			h[idx] = &Commit{
 				Timestamp: c.Timestamp,
@@ -51,7 +50,7 @@ func ParseHook(r *http.Request) []*Commit {
 				Username:  c.Author.Username,
 				RealName:  c.Author.RealName,
 				Path:      u.Hostname() + u.Path,
-				TeXRoot:   r.URL.Query().Get("root"), // in the Query
+				TeXRoot:   r.URL.Query().Get("root"), // empty if not in query
 			}
 		}
 		return h
@@ -67,7 +66,6 @@ func ParseHook(r *http.Request) []*Commit {
 		}
 		// restruct the array of commits into a general purpose container
 		h := make([]*Commit, len(p.Commits))
-		//fmt.Printf("%+v", r.URL.Query())
 		for idx, c := range p.Commits {
 			h[idx] = &Commit{
 				Timestamp: c.Timestamp,
@@ -78,7 +76,7 @@ func ParseHook(r *http.Request) []*Commit {
 				Username:  c.Author.Username,
 				RealName:  c.Author.Username, // gitlab has no RealName
 				Path:      u.Hostname() + u.Path,
-				TeXRoot:   r.URL.Query().Get("root"), // in the Query
+				TeXRoot:   r.URL.Query().Get("root"), // empty if not in query
 			}
 		}
 		return h
