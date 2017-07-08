@@ -106,6 +106,7 @@ func grabAssets() {
 		"custom.css",
 		"drawArrows.js",
 		"sort.js",
+		"default.html",
 	}
 	for _, asset := range assets {
 		grabAsset(asset)
