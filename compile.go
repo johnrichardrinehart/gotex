@@ -70,7 +70,7 @@ func compile(rows []*parser.Commit, c chan []*parser.Commit) {
 		if !runCommand(exec.Command("git", "clean", "-f"), repopath) {
 			logger.Error.Println("git clean failed.")
 		}
-		logger.Anything.Println() // create a space between commits
+		logger.Info.Printf("All done with commit %v.\n\n", row.ID) // create a space between commits
 	}
 	c <- rows
 }
