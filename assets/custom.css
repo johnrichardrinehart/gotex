@@ -24,7 +24,8 @@ body, #heading {
 }
 
 .container-fluid {
-   margin: 0 5vw 0 5vw;
+   /*margin: 0 5vw 0 5vw;*/
+   text-align:center;
 }
 
 a {
@@ -42,7 +43,7 @@ a:hover {
 }
 
 #heading > div {
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 canvas, p {
@@ -54,3 +55,30 @@ canvas, p {
 .arrows {
     cursor: pointer;
 }
+/* Taken from https://scotch.io/quick-tips/default-sizes-for-twitter-bootstraps-media-queries */
+    /* Large Devices, Wide Screens */
+    @media only screen and (max-width : 1200px) {
+        .container {
+            1200px;
+        }
+    }
+
+    /* Medium Devices, Desktops */
+    @media only screen and (max-width : 992px) {
+
+    }
+
+    /* Small Devices, Tablets */
+    @media only screen and (max-width : 768px) {
+
+    }
+
+    /* Extra Small Devices, Phones */ 
+    @media only screen and (max-width : 480px) {
+
+    }
+
+    /* Custom, iPhone Retina */ 
+    @media only screen and (max-width : 320px) {
+
+    }

@@ -121,10 +121,10 @@ func addRows(db *sql.DB, c chan []*parser.Commit) {
 			logger.Error.Printf("File builds/%v/%v/%v.pdf doesn't exist. Maybe compilation failed.\n", r.Path, r.ID, r.TeXRoot)
 		}
 		// Diff PDF
-		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.TeXRoot)); err == nil {
-			r.DiffName = fmt.Sprintf("/builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.TeXRoot)
+		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.ID)); err == nil {
+			r.DiffName = fmt.Sprintf("/builds/%v/%v/%v.diff.pdf", r.Path, r.ID, r.ID)
 		} else {
-			logger.Error.Printf("File builds/%v/%v/%v.diff.pdf doesn't exist. Maybe compilation failed.\n", r.Path, r.ID, r.TeXRoot)
+			logger.Error.Printf("File builds/%v/%v/%v.diff.pdf doesn't exist. Maybe compilation failed.\n", r.Path, r.ID, r.ID)
 		}
 		// Log PDF
 		if _, err := os.Stat(fmt.Sprintf("builds/%v/%v/%v.log", r.Path, r.ID, r.TeXRoot)); err == nil {

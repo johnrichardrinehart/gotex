@@ -10,13 +10,13 @@
     </head>
     <body>
         <!--loop through the number of compilations-->
-        <div id="app" class="container-fluid">
+        <div id="app" class="container">
             <div class="row" id="heading">
-                <div class="col-xs-2 text-center">
+                <div class="col-xs-3 text-center">
                     <p> Timestamp </p>
                     <canvas id="canvas-ts" class="arrows"></canvas>
                 </div>
-                <div class="col-xs-1 text-center">
+                <div class="col-xs-2 text-center">
                     <p>Commit ID</p>
                     <canvas id="canvas-id" class="arrows"></canvas>
                 </div>
@@ -27,19 +27,19 @@
                     <p>Username</p>
                     <canvas id="canvas-un" class="arrows"></canvas>
                 </div>
-                <div class="col-xs-2 text-center">
-                    <p>Compiled PDF</p>
+                <div class="col-xs-1 text-center">
+                    <p>PDF</p>
                 </div>
-                <div class="col-xs-2 text-center">
+                <div class="col-xs-1 text-center">
                     <p>Log File</p>
                 </div>
-                <div class="col-xs-2 text-center">
+                <div class="col-xs-1 text-center">
                     <p>Diff PDF</p>
                 </div>
             </div>
             <div class="row" v-for="row in rows">
-                <div class="col-xs-2 text-center">{{row.Timestamp}}</div>
-                <div class="col-xs-1 text-center">
+                <div class="col-xs-3 text-center">{{row.Timestamp}}</div>
+                <div class="col-xs-2 text-center">
                     <a :href=row.URL :title=row.Message>
                         {{row.ID | abbreviate(8) }}
                     </a>
@@ -48,19 +48,19 @@
                     <p>{{row.Branch}}</p>
                 </div>
                 <div class="col-xs-2 text-center" :title=row.RealName>{{row.Username}}</div>
-                <div class="col-xs-2 text-center">
+                <div class="col-xs-1 text-center">
                     <a :href=row.PDFName>
-                        {{row.PDFName | filename }}
+                        {{row.PDFName | filename_print(5) }}
                     </a>
                 </div>
-                <div class="col-xs-2 text-center">
+                <div class="col-xs-1 text-center">
                     <a :href=row.LogName>
-                        {{row.LogName | filename }}
+                        {{row.LogName | filename_print(5) }}
                     </a>
                 </div>
-                <div class="col-xs-2 text-center">
+                <div class="col-xs-1 text-center">
                     <a :href=row.DiffName>
-                        {{row.DiffName | filename }}
+                        {{row.DiffName | filename_print(5) }}
                     </a>
                 </div>
             </div>
@@ -76,8 +76,25 @@
                     abbreviate: function(s,n) {
                         return s.slice(0,n)
                     },
-                    filename: function(s) {
-                        return s.split('/').slice(-1)[0]
+                    filename_print: function(s,n) {
+                        // strip the root of the filename to n characters (at most 10)
+                        var MAXLENGTH = 7
+                        var f_root = s.split('/').slice(-1)[0].split('.')[0] // filename root
+                        var f_exts =
+                            s.split('/').slice(-1)[0].split('.').slice(1).join('.')
+                        if (f_root.length < MAXLENGTH) {
+                                return f_root + "." + f_exts
+                        }
+                        if (f_root == "" || n == -1 && f_root.length < MAXLENGTH) {
+                            return f_root == "" ? "" : f_root + "." + f_exts
+                        }
+                        if (f_root.length >= MAXLENGTH && n <= MAXLENGTH) {
+                            // concatenate n characters of the filename root to
+                            // all the extensions of the filename
+                            return f_root.slice(0,n) + '\u00B7'.repeat(5) + f_exts
+                        } else {
+                            return f_root.slice(0,MAXLENGTH) + '\u00B7'.repeat(5) + f_exts
+                        }
                     }
                 }
             })
