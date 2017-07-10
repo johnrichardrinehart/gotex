@@ -52,6 +52,8 @@ func main() {
 	r.Get("/:domain/:user/:repo", getHandler(db))
 	// repo page + branch
 	r.Get("/:domain/:user/:repo/:branch", getHandler(db))
+	// WebSockets
+	r.Get("/ws", wsHandler(db))
 	// Push event
 	r.Post("/:domain/:user/:repo", postHandler(db))
 	// serve asset files

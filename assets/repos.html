@@ -102,4 +102,23 @@
     </body>
     <script src="/assets/drawArrows.js"></script>
     <script src="/assets/sort.js"></script>
+            <script>
+                window.onload = function() {
+                    var socket = new WebSocket(
+                        'ws://' +
+                        window.location.hostname +
+                        ":" +
+                        window.location.port +
+                        '/ws'
+                    )
+                    function sendPathname(evt) {
+                        socket.send(JSON.stringify({"loc":
+                            window.location.pathname}))
+                    }
+                    socket.onopen = socket.onclose = sendPathname
+                    socket.onmessage = function(evt) {
+                        console.log(evt.data);
+                    }
+                }
+            </script>
 </html>
