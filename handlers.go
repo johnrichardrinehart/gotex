@@ -3,13 +3,28 @@ package main
 import (
 	"database/sql"
 	"github.com/fuzzybear3965/gotex/internal/parser"
+	"github.com/gorilla/websocket"
 	"github.com/husobee/vestigo"
 	"html/template"
 	"net/http"
 	"path/filepath"
 )
 
-func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+// func wsHandler(d *sql.DB) http.HandlerFunc {
+//		if conn, err := upgrader.Upgrade(w, r, nil); err != nil {
+//			logger.Fatal.Println(err)
+//		} else {
+//			logger.Debug.Println("%+v connected.", conn)
+//			return
+//		}
+// }
+
+func getHandler(d *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//TODO: render the template immediately and serve the rows over WebSockets
 		w.WriteHeader(200)
@@ -45,7 +60,7 @@ func getHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func postHandler(d *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+func postHandler(d *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug.Println("Received a post request.")
 		queries := r.URL.Query()

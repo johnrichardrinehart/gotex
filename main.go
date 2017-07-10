@@ -24,6 +24,8 @@ type loggerStruct struct {
 	Anything *log.Logger
 }
 
+// declare logger to have global scope
+var logger *loggerStruct
 var addrFlag = flag.String("address", "127.0.0.1:8080", "listening address and port \n\t(e.g. \"gotex --address 127.0.0.1:8080\" or \"gotex --address :8080\")\n\t")
 var logFlag = flag.String("logfile", "gotex.log", "log filename\n\t")
 var debugFlag = flag.Bool("debug", false, "debug?")
