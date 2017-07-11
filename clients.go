@@ -8,6 +8,6 @@ import (
 type clients map[*websocket.Conn]*client
 
 type client struct {
-	urls []string
-	id   int
+	url string
+	id  int
 }

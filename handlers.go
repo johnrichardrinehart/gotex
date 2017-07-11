@@ -15,46 +15,42 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-var wsClients = make(clients)
+var curClients = make(clients)
 
 func wsHandler(d *sql.DB) http.HandlerFunc {
-	n_clients := 0
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			logger.Fatal.Println(err)
 		} else {
 			conn.WriteMessage(websocket.TextMessage, []byte("gotex + WebSockets == \"glorious configuration\""))
-
-			// connection isn't registered
-			if _, ok := wsClients[conn]; !ok {
-				n_clients += 1
-				wsClients[conn] = &client{[]string{}, n_clients}
+			// connection hasn't been registered
+			if _, iscurclient := curClients[conn]; !iscurclient {
+				// have we seen this dude, before?
+				curClients[conn] = &client{url: "", id: len(curClients) + 1}
+			} else {
+				logger.Fatal.Println("Somehow a user has been registered having had sent a new request. This doesn't make any sense.")
 			}
 		}
 		// wait for client messages
 		go func() {
+			defer conn.Close()
 			jsonmsg := make(map[string]string)
 			for {
-				defer conn.Close()
 				if err := conn.ReadJSON(&jsonmsg); err != nil {
 					if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 						logger.Fatal.Printf("Unexpected WebSocket error: %v", err)
 					} else {
-						if jsonmsg["loc"] != "" {
-							logger.Info.Printf("WebSocket client departing %v.\n", jsonmsg["loc"])
-							n_clients -= 1
-							logger.Debug.Printf("%v clients remaining.", n_clients)
-							delete(wsClients, conn)
+						logger.Debug.Printf("Departing: WebSocket client %v at %v.\n", curClients[conn].id, curClients[conn].url)
 
-						}
 					}
+					delete(curClients, conn)
+					logger.Debug.Printf("%v clients remaining.", len(curClients))
 					break
 				}
 				if jsonmsg["loc"] != "" {
-					logger.Debug.Printf("WebSocket client %v accessing %v.\n", wsClients[conn].id, jsonmsg["loc"])
-					//wsClients[cIdx].urls = append(wsClients[cIdx].urls, jsonmsg["loc"])
-					wsClients[conn].urls = append(wsClients[conn].urls, jsonmsg["loc"])
+					curClients[conn].url = jsonmsg["loc"]
+					logger.Debug.Printf("Arriving: WebSocket client %v at %v.\n", curClients[conn].id, curClients[conn].url)
 
 				}
 			}
